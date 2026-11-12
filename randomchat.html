@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dukdui SPU</title>
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background: #091020;
+            color: #fff;
+            font-family: "Prompt", sans-serif;
+        }
+
+        /* ------ เมนูด้านซ้าย------ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 260px;
+            height: 100vh;
+            background: #0f172a;
+            border-right: 1px solid #1e293b;
+            padding: 24px 16px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .logo {
+            color: #38bdf8;
+            margin-bottom: 30px;
+            padding-left: 10px;
+        }
+
+        .menu-list {
+            list-style: none;
+            flex-grow: 1;
+        }
+
+        .menu-list li {
+            padding: 12px 16px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .menu-list li i {
+            margin-right: 10px;
+        }
+
+        .menu-list li:hover,
+        .menu-list li.active {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 16px;
+            border-top: 1px solid #1e293b;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            background: #cbd5e1;
+            border-radius: 50%;
+        }
+
+        .username {
+            font-size: 13px;
+            font-weight: 600;
+            display: block;
+        }
+
+        .status {
+            font-size: 11px;
+            color: #94a3b8;
+        }
+
+        /* ---------- เนื้อหาหลัก ---------- */
+        .main-content {
+            margin-left: 260px;
+            padding: 24px 20px;
+        }
+
+        .box {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .box h2 {
+            margin-bottom: 16px;
+        }
+
+        .stage {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #000;
+            border: 1px solid #1e293b;
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        #other {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* กล้องตัวเอง อยู่มุมขวาล่าง */
+        #me {
+            position: absolute;
+            right: 16px;
+            bottom: 16px;
+            width: 25%;
+            border-radius: 12px;
+            border: 2px solid #fff;
+            transform: scaleX(-1);
+        }
+
+        /* ข้อความสถานะ ตรงกลางจอ */
+        #status {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 20px;
+            color: #cfd6e4;
+            background: rgba(9, 16, 32, 0.85);
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 999px;
+            padding: 12px 24px;
+            font-family: inherit;
+            font-size: 15px;
+            color: #fff;
+            background: #5b5bff;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.85;
+        }
+
+        button:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        #leave {
+            background: #ef4444;
+        }
+    </style>
+</head>
+
+<body>
+    <aside class="sidebar">
+        <h2 class="logo">Dukdui SPU</h2>
+        <ul class="menu-list">
+            <li><i class="fa-solid fa-house"></i>หน้าแรก</li>
+            <li><i class="fa-solid fa-comment"></i>แชทส่วนตัว</li>
+            <li class="active"><i class="fa-solid fa-users"></i>สุ่มคุยแลกเปลี่ยนความคิด</li>
+        </ul>
+        <div class="user-profile">
+            <div class="avatar"></div>
+            <div>
+                <span class="username">@csi69</span>
+                <span class="status">ออนไลน์</span>
+            </div>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="box">
+            <h2>สุ่มคุยแลกเปลี่ยนความคิด</h2>
+
+            <div class="stage">
+                <video id="other" autoplay playsinline></video>
+                <video id="me" autoplay muted playsinline></video>
+                <div id="status">กำลังเปิดกล้อง...</div>
+            </div>
+
+            <div class="buttons">
+                <button id="start" disabled>เริ่มสุ่มจับคู่</button>
+                <button id="next" disabled>ถัดไป</button>
+                <button id="leave" disabled>ออก</button>
+            </div>
+        </div>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const config = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+        const socket = io();
+
+        const meVideo = document.getElementById('me');
+        const otherVideo = document.getElementById('other');
+        const statusBox = document.getElementById('status');
+        const startBtn = document.getElementById('start');
+        const nextBtn = document.getElementById('next');
+        const leaveBtn = document.getElementById('leave');
+
+        let pc = null;// การเชื่อมต่อกับคู่
+        let localStream = null;// กล้อง+ไมค์
+        let waitingCandidates = []; // เก็บ candidate ที่มาก่อนเวลา
+
+        // แสดงข้อความกลางจอ 
+        function showStatus(text) {
+            statusBox.textContent = text;
+            statusBox.style.display = text ? 'flex' : 'none';
+        }
+
+        // เปิดกล้อง
+        async function openCamera() {
+            try {
+                localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                meVideo.srcObject = localStream;
+                startBtn.disabled = false;
+                showStatus('กดปุ่ม "เริ่มสุ่มจับคู่" เพื่อเริ่มคุย');
+            } catch (err) {
+                showStatus('เปิดกล้องไม่ได้ (' + err.name + ') กรุณากดอนุญาตกล้อง และเปิดเว็บผ่าน localhost');
+            }
+        }
+
+        // ปิดการเชื่อมต่อกับคู่ (แต่กล้องเรายังเปิดอยู่)
+        function closePeer() {
+            if (pc) pc.close();
+            pc = null;
+            waitingCandidates = [];
+            otherVideo.srcObject = null;
+        }
+
+        function createPeer() {
+            closePeer();
+            pc = new RTCPeerConnection(config);
+            localStream.getTracks().forEach((t) => pc.addTrack(t, localStream));
+
+            pc.ontrack = (e) => {
+                otherVideo.srcObject = e.streams[0];
+                showStatus('');
+            };
+
+            pc.onicecandidate = (e) => {
+                if (e.candidate) socket.emit('signal', { candidate: e.candidate });
+            };
+        }
+
+        // ---------- ปุ่มต่างๆ ----------
+        startBtn.onclick = () => {
+            startBtn.disabled = true;
+            nextBtn.disabled = false;
+            leaveBtn.disabled = false;
+            showStatus('กำลังหาคู่...');
+            socket.emit('join');
+        };
+
+        nextBtn.onclick = () => {
+            closePeer();
+            showStatus('กำลังหาคู่ใหม่...');
+            socket.emit('next');
+        };
+
+        leaveBtn.onclick = () => {
+            closePeer();
+            socket.emit('leave');
+            startBtn.disabled = false;
+            nextBtn.disabled = true;
+            leaveBtn.disabled = true;
+            showStatus('กดปุ่ม "เริ่มสุ่มจับคู่" เพื่อเริ่มคุย');
+        };
+
+        // ---------- รับข้อความจากเซิร์ฟเวอร์ ----------
+        socket.on('waiting', () => {
+            closePeer();
+            showStatus('กำลังหาคู่...');
+        });
+
+        socket.on('matched', async ({ initiator }) => {
+            showStatus('เจอคู่แล้ว กำลังเชื่อมต่อ...');
+            createPeer();
+            if (initiator) {
+                const offer = await pc.createOffer();
+                await pc.setLocalDescription(offer);
+                socket.emit('signal', { description: pc.localDescription });
+            }
+        });
+
+        socket.on('signal', async (data) => {
+            if (!pc) return;
+            if (data.description) {
+                await pc.setRemoteDescription(data.description);
+                // เอา candidate ที่เก็บไว้มาใช้
+                for (const c of waitingCandidates) await pc.addIceCandidate(c);
+                waitingCandidates = [];
+                if (data.description.type === 'offer') {
+                    const answer = await pc.createAnswer();
+                    await pc.setLocalDescription(answer);
+                    socket.emit('signal', { description: pc.localDescription });
+                }
+            } else if (data.candidate) {
+                if (pc.remoteDescription) await pc.addIceCandidate(data.candidate);
+                else waitingCandidates.push(data.candidate);
+            }
+        });
+
+        // อีกฝั่งออก เซิร์ฟเวอร์จะหาคู่ใหม่
+        socket.on('partner-left', () => {
+            closePeer();
+            showStatus('อีกฝั่งออกไปแล้ว กำลังหาคู่ใหม่...');
+        });
+
+        openCamera();
+    </script>
+</body>
+
+</html>
